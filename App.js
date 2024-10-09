@@ -3,12 +3,14 @@ import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, Aler
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
+import { AuthProvider, useAuth } from './context/AuthContext'; // Import AuthProvider và useAuth
 
 const Stack = createStackNavigator();
 
 const SignInScreen = () => {
   const [number, setNumber] = React.useState('');
-  const navigation = useNavigation(); // Khai báo navigation
+  const navigation = useNavigation();
+  const { setPhoneNumber } = useAuth(); // Sử dụng setPhoneNumber từ AuthContext
 
   const formatPhoneNumber = (input) => {
     const cleaned = input.replace(/\D/g, '');
@@ -28,9 +30,9 @@ const SignInScreen = () => {
     if (number.length < 10) {
       Alert.alert('Lỗi', 'Vui lòng nhập đủ 10 số điện thoại.');
     } else {
+      setPhoneNumber(number); // Lưu số điện thoại vào Context
       Alert.alert('Thông báo', 'Đang tiến hành đăng nhập với số điện thoại: ' + number);
-      // Điều hướng đến HomeScreen
-      navigation.navigate('Home');
+      navigation.navigate('Home'); // Điều hướng đến HomeScreen
     }
   };
 
@@ -59,29 +61,34 @@ const SignInScreen = () => {
 };
 
 const HomeScreen = () => {
+  const { phoneNumber } = useAuth(); // Lấy thông tin số điện thoại từ AuthContext
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Chào mừng đến với trang chính!</Text>
+      <Text style={styles.phoneNumber}>Số điện thoại đăng nhập: {phoneNumber}</Text>
     </SafeAreaView>
   );
 };
 
 const App = () => {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="SignIn">
-        <Stack.Screen 
-          name="SignIn" 
-          component={SignInScreen} 
-          options={{ headerShown: false }} 
-        />
-        <Stack.Screen 
-          name="Home" 
-          component={HomeScreen} 
-          options={{ headerShown: true, title: 'Trang chính' }} 
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <AuthProvider> {/* Bao bọc toàn bộ ứng dụng bằng AuthProvider */}
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="SignIn">
+          <Stack.Screen 
+            name="SignIn" 
+            component={SignInScreen} 
+            options={{ headerShown: false }} 
+          />
+          <Stack.Screen 
+            name="Home" 
+            component={HomeScreen} 
+            options={{ headerShown: true, title: 'Trang chính' }} 
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </AuthProvider>
   );
 };
 
@@ -131,6 +138,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
+    marginTop: 20,
+  },
+  phoneNumber: {
+    fontSize: 18,
     marginTop: 20,
   },
 });
